@@ -9,7 +9,11 @@ from tools import (
 )
 
 
-def run_tool(step: str, question: str):
+def run_tool(
+    step: str,
+    question: str,
+    language: str = "en",
+):
     if step == "notes":
         return search_my_notes.invoke(
             {"query": question}
@@ -19,7 +23,7 @@ def run_tool(step: str, question: str):
         return get_style_examples.invoke(
             {
                 "question": question,
-                "language": "en",
+                "language": language,
             }
         )
 
@@ -29,7 +33,11 @@ def run_tool(step: str, question: str):
     return None
 
 
-def execute_plan(question: str, plan: Plan):
+def execute_plan(
+    question: str,
+    plan: Plan,
+    language: str = "en",
+):
     execution_order = get_execution_order(
         need_notes=plan.need_notes,
         need_style=plan.need_style,
@@ -55,6 +63,7 @@ def execute_plan(question: str, plan: Plan):
                 run_tool,
                 step,
                 question,
+                language,
             )
             for step in independent_steps
         }

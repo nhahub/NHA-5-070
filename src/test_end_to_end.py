@@ -3,6 +3,7 @@ from decision_policy import decide
 from planner import make_plan
 from executor import execute_plan
 from reply_generator import generate_reply
+from response_builder import build_twin_reply
 
 
 audio_path = "twin_data/test_audio/question1.m4a"
@@ -42,6 +43,13 @@ if decision.action == "answer":
     execution = execute_plan(
         question=result["text"],
         plan=plan,
+        language=(
+            "en"
+            if result["language"].lower().startswith("en")
+            else "ar"
+            if result["language"].lower().startswith("ar")
+            else "mixed"
+        ),
     )
 
     print("Execution order:", execution["execution_order"])
@@ -60,8 +68,21 @@ if decision.action == "answer":
         profile=profile,
     )
 
-    print("\n===== FINAL REPLY =====")
-    print(reply)
+
+    print("\n=== STEP 6: BUILDING FINAL TWIN REPLY ===")
+
+    final_reply = build_twin_reply(
+        decision=decision,
+        reply_text=reply,
+        execution=execution,
+    )
+
+    print("\n===== FINAL TWIN REPLY =====")
+    print(final_reply)
+
+    print("\n===== AS DICT =====")
+    print(final_reply.model_dump())
+
 
 else:
 

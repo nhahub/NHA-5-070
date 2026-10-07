@@ -2,7 +2,8 @@ from planner import make_plan
 from executor import execute_plan
 
 
-question = "Ahmed, explain RAG in the way you normally explain technical topics."
+question = "يا أحمد، إيه هو الـRAG ببساطة؟"
+language = "ar"
 
 plan = make_plan(question)
 
@@ -12,6 +13,7 @@ print(plan.model_dump())
 result = execute_plan(
     question=question,
     plan=plan,
+    language=language,
 )
 
 print("\n===== EXECUTION ORDER =====")

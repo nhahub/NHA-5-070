@@ -48,7 +48,11 @@ def make_plan(question: str) -> Plan:
     )
 
     need_notes = asks_about_knowledge
-    need_style = asks_for_style
+
+    # Style examples are useful for normal answerable questions,
+    # not only when the instructor explicitly asks about Ahmed's style.
+    need_style = asks_about_knowledge or asks_for_style
+
     need_profile = about_ahmed
 
     return Plan(
