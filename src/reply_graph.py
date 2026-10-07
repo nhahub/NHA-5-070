@@ -1,26 +1,27 @@
 from graphlib import TopologicalSorter
 
 
-def build_plan_graph(need_notes: bool, need_style: bool, need_profile: bool):
-    """
-    Build the dependency graph for the reply process.
-    """
-
+def build_plan_graph(
+    need_notes: bool,
+    need_style: bool,
+    need_profile: bool,
+    need_glossary: bool,
+):
     graph = {}
 
-    # Notes retrieval is independent.
     if need_notes:
         graph["notes"] = set()
 
-    # Style retrieval is independent.
     if need_style:
         graph["style"] = set()
 
-    # Profile retrieval is independent.
     if need_profile:
         graph["profile"] = set()
 
-    # Final reply depends on all requested resources.
+    if need_glossary:
+        graph["glossary"] = set()
+
+    # Reply must wait for all independent tool branches.
     graph["reply"] = set(graph.keys())
 
     return graph
@@ -29,16 +30,14 @@ def build_plan_graph(need_notes: bool, need_style: bool, need_profile: bool):
 def get_execution_order(
     need_notes: bool,
     need_style: bool,
-    need_profile: bool
+    need_profile: bool,
+    need_glossary: bool,
 ):
-    """
-    Return the dependency-respecting execution order.
-    """
-
     graph = build_plan_graph(
         need_notes=need_notes,
         need_style=need_style,
         need_profile=need_profile,
+        need_glossary=need_glossary,
     )
 
     sorter = TopologicalSorter(graph)

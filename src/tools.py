@@ -9,9 +9,9 @@ from langchain_core.tools import tool
 from retriever import NotesRetriever
 
 
-# ---------------------------------------------------------
-# Notes retriever
-# ---------------------------------------------------------
+# ============================================================
+# Notes Retriever
+# ============================================================
 
 retriever = NotesRetriever(
     "twin_data/knowledge/course_notes.md",
@@ -36,9 +36,9 @@ def search_my_notes(query: str) -> str:
     return "\n\n---\n\n".join(formatted_results)
 
 
-# ---------------------------------------------------------
-# Profile
-# ---------------------------------------------------------
+# ============================================================
+# Profile Tool
+# ============================================================
 
 @tool
 def get_profile() -> str:
@@ -50,9 +50,9 @@ def get_profile() -> str:
     )
 
 
-# ---------------------------------------------------------
-# Style examples
-# ---------------------------------------------------------
+# ============================================================
+# Style Retrieval
+# ============================================================
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
 
@@ -70,7 +70,7 @@ def embed_style_texts(texts):
         texts,
         return_tensors="pt",
         padding=True,
-        truncation=True
+        truncation=True,
     )
 
     with torch.no_grad():
@@ -92,14 +92,14 @@ def embed_style_texts(texts):
     return F.normalize(
         embeddings,
         p=2,
-        dim=1
+        dim=1,
     )
 
 
 @tool
 def get_style_examples(
     question: str,
-    language: str = "en"
+    language: str = "en",
 ) -> str:
     """Retrieve examples similar to the question to imitate Ahmed's communication style."""
 
@@ -111,7 +111,7 @@ def get_style_examples(
 
     with examples_path.open(
         "r",
-        encoding="utf-8"
+        encoding="utf-8",
     ) as file:
 
         for line in file:
@@ -126,23 +126,22 @@ def get_style_examples(
     if not examples:
         return "No style examples available."
 
-    # -----------------------------------------------------
-    # Prefer the requested language,
-    # but do not completely exclude mixed examples.
-    # -----------------------------------------------------
-
+    # Prefer examples in the requested language.
     preferred_examples = [
         example
         for example in examples
         if example.get("language") == language
     ]
 
+    # Mixed examples are useful for Ahmed's natural
+    # Egyptian Arabic + English technical style.
     mixed_examples = [
         example
         for example in examples
         if example.get("language") == "mixed"
     ]
 
+    # Keep other languages as fallback candidates.
     other_examples = [
         example
         for example in examples
@@ -171,24 +170,24 @@ def get_style_examples(
 
     similarities = torch.matmul(
         query_embedding,
-        example_embeddings.T
+        example_embeddings.T,
     ).squeeze(0)
 
     top_k = min(
         3,
-        len(candidate_examples)
+        len(candidate_examples),
     )
 
     top_scores, top_indices = torch.topk(
         similarities,
-        k=top_k
+        k=top_k,
     )
 
     selected_examples = []
 
     for score, index in zip(
         top_scores,
-        top_indices
+        top_indices,
     ):
 
         example = candidate_examples[
@@ -199,16 +198,53 @@ def get_style_examples(
             {
                 "similarity": round(
                     float(score.item()),
-                    4
+                    4,
                 ),
                 "question": example["question"],
                 "answer": example["answer"],
-                "language": example["language"]
+                "language": example["language"],
             }
         )
 
     return json.dumps(
         selected_examples,
         ensure_ascii=False,
-        indent=2
+        indent=2,
     )
+
+
+# ============================================================
+# Course Glossary
+# ============================================================
+
+COURSE_GLOSSARY = {
+    "rag": (
+        "RAG stands for Retrieval-Augmented Generation. "
+        "It retrieves relevant information from a knowledge base "
+        "before the language model generates the answer."
+    ),
+    "fine-tuning": (
+        "Fine-tuning means training a pretrained model further "
+        "on a specific dataset to adapt its behavior or performance."
+    ),
+    "agent": (
+        "An AI agent is a system that can reason about a task "
+        "and decide which tools or actions are needed to complete it."
+    ),
+    "pruning": (
+        "Pruning is the process of removing unnecessary branches "
+        "or options from a decision process to reduce the search space."
+    ),
+}
+
+
+@tool
+def get_course_glossary(term: str) -> str:
+    """Return a concise definition of an Agentic AI course term."""
+
+    normalized_term = term.strip().lower()
+
+    if normalized_term in COURSE_GLOSSARY:
+        return COURSE_GLOSSARY[normalized_term]
+
+    return f"No glossary definition found for: {term}"

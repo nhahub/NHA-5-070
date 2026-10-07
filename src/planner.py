@@ -5,6 +5,7 @@ class Plan(BaseModel):
     need_notes: bool
     need_style: bool
     need_profile: bool
+    need_glossary: bool
 
 
 def make_plan(question: str) -> Plan:
@@ -18,6 +19,7 @@ def make_plan(question: str) -> Plan:
             "your background",
             "your profile",
             "about you",
+            "أحمد",
         ]
     )
 
@@ -29,6 +31,9 @@ def make_plan(question: str) -> Plan:
             "normally explain",
             "how you explain",
             "in your own words",
+            "بطريقتك",
+            "طريقتك",
+            "بطريقة شرحك",
         ]
     )
 
@@ -44,7 +49,59 @@ def make_plan(question: str) -> Plan:
             "decision tree",
             "retrieval",
             "embedding",
+            "الـrag",
+            "الـagent",
+            "الـpruning",
         ]
+    )
+
+    asks_for_definition = any(
+        phrase in question_lower
+        for phrase in [
+            "what is",
+            "what's",
+            "what does",
+            "define",
+            "definition of",
+            "what do you mean by",
+            "إيه هو",
+            "ايه هو",
+            "ما هو",
+            "يعني إيه",
+            "يعني ايه",
+            "تعريف",
+        ]
+    )
+
+    asks_for_comparison = any(
+        phrase in question_lower
+        for phrase in [
+            "difference between",
+            "difference",
+            "compare",
+            "comparison",
+            "الفرق بين",
+            "ايه الفرق",
+            "إيه الفرق",
+            "مقارنة",
+        ]
+    )
+
+    glossary_terms = [
+        "rag",
+        "reg",
+        "fine-tuning",
+        "fine tuning",
+        "agent",
+        "pruning",
+        "الـrag",
+        "الـagent",
+        "الـpruning",
+    ]
+
+    asks_about_glossary_term = any(
+        term in question_lower
+        for term in glossary_terms
     )
 
     need_notes = asks_about_knowledge
@@ -55,8 +112,17 @@ def make_plan(question: str) -> Plan:
 
     need_profile = about_ahmed
 
+    # Use the glossary only for direct definition questions.
+    # Comparison questions should rely on notes instead.
+    need_glossary = (
+        asks_for_definition
+        and asks_about_glossary_term
+        and not asks_for_comparison
+    )
+
     return Plan(
         need_notes=need_notes,
         need_style=need_style,
         need_profile=need_profile,
+        need_glossary=need_glossary,
     )
