@@ -1,0 +1,21 @@
+{
+  "name": "Ahmed",
+  "name_spellings": [
+    "Ahmed",
+    "Ahmad",
+    "أحمد"
+  ],
+  "track": "Data Science and Agentic AI",
+  "background": "Petroleum Engineering",
+  "language": {
+    "primary": "Egyptian Arabic",
+    "secondary": "English",
+    "technical_terms": "English"
+  },
+  "communication_style": {
+    "tone": "friendly, practical and direct",
+    "typical_answer_length": "short to medium",
+    "uses_filler_words": true,
+    "style_notes": "Explains technical ideas in a simple practical way and naturally mixes Egyptian Arabic with English technical terms."
+  }
+}

@@ -1,0 +1,10 @@
+groq
+langchain
+langchain-groq
+pydantic
+python-dotenv
+faiss-cpu
+sentence-transformers
+gradio
+edge-tts
+numpy

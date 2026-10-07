@@ -1,0 +1,37 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Voice samples - never publish
+voice/
+twin_data/voice/
+
+# Audio files
+*.wav
+*.mp3
+*.m4a
+
+# Generated outputs
+outputs/
+
+# Vector databases
+chroma_db/
+faiss_index/
+
+# OS
+.DS_Store
+Thumbs.db
