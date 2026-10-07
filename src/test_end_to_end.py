@@ -4,9 +4,12 @@ from planner import make_plan
 from executor import execute_plan
 from reply_generator import generate_reply
 from response_builder import build_twin_reply
+from memory import RollingMemory
 
 
 audio_path = "twin_data/test_audio/question1.m4a"
+
+memory = RollingMemory(max_turns=10)
 
 
 print("=== STEP 1: TRANSCRIPTION ===")
@@ -66,6 +69,7 @@ if decision.action == "answer":
         notes=notes,
         style=style,
         profile=profile,
+        memory_context=memory.get_context(),
     )
 
 
@@ -82,6 +86,15 @@ if decision.action == "answer":
 
     print("\n===== AS DICT =====")
     print(final_reply.model_dump())
+
+
+    memory.add_turn(
+        question=result["text"],
+        answer=reply,
+    )
+
+    print("\n===== MEMORY AFTER TURN =====")
+    print(memory.get_context())
 
 
 else:
