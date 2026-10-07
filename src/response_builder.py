@@ -5,12 +5,14 @@ TOOL_NAMES = {
     "notes": "search_my_notes",
     "style": "get_style_examples",
     "profile": "get_profile",
+    "glossary": "get_course_glossary",
 }
 
 SOURCE_NAMES = {
     "notes": "course_notes.md",
     "style": "style_examples.jsonl",
     "profile": "profile.json",
+    "glossary": "course_glossary",
 }
 
 
