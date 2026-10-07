@@ -9,9 +9,9 @@ from langchain_core.tools import tool
 from retriever import NotesRetriever
 
 
-# -----------------------------
-# Notes Retriever
-# -----------------------------
+# ---------------------------------------------------------
+# Notes retriever
+# ---------------------------------------------------------
 
 retriever = NotesRetriever(
     "twin_data/knowledge/course_notes.md",
@@ -21,9 +21,7 @@ retriever = NotesRetriever(
 
 @tool
 def search_my_notes(query: str) -> str:
-    """
-    Search Ahmed's personal course notes and return the most relevant information.
-    """
+    """Search Ahmed's course notes for information relevant to the question."""
     results = retriever.search(query)
 
     formatted_results = []
@@ -38,28 +36,33 @@ def search_my_notes(query: str) -> str:
     return "\n\n---\n\n".join(formatted_results)
 
 
-# -----------------------------
-# Ahmed's Profile
-# -----------------------------
+# ---------------------------------------------------------
+# Profile
+# ---------------------------------------------------------
 
 @tool
 def get_profile() -> str:
-    """
-    Get Ahmed's profile, background, language preferences, and communication style.
-    """
+    """Return Ahmed's profile and communication style information."""
     profile_path = Path("twin_data/profile.json")
 
-    return profile_path.read_text(encoding="utf-8")
+    return profile_path.read_text(
+        encoding="utf-8"
+    )
 
 
-# -----------------------------
-# Style Examples Retriever
-# -----------------------------
+# ---------------------------------------------------------
+# Style examples
+# ---------------------------------------------------------
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
 
-style_tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-style_model = AutoModel.from_pretrained(MODEL_NAME)
+style_tokenizer = AutoTokenizer.from_pretrained(
+    MODEL_NAME
+)
+
+style_model = AutoModel.from_pretrained(
+    MODEL_NAME
+)
 
 
 def embed_style_texts(texts):
@@ -77,51 +80,90 @@ def embed_style_texts(texts):
 
     attention_mask = inputs["attention_mask"].unsqueeze(-1)
 
-    masked_embeddings = token_embeddings * attention_mask
+    masked_embeddings = (
+        token_embeddings * attention_mask
+    )
 
     embeddings = (
         masked_embeddings.sum(dim=1)
         / attention_mask.sum(dim=1)
     )
 
-    return F.normalize(embeddings, p=2, dim=1)
+    return F.normalize(
+        embeddings,
+        p=2,
+        dim=1
+    )
 
 
 @tool
-def get_style_examples(question: str, language: str = "en") -> str:
-    """
-    Retrieve the most similar examples of how Ahmed answers questions.
-    """
+def get_style_examples(
+    question: str,
+    language: str = "en"
+) -> str:
+    """Retrieve examples similar to the question to imitate Ahmed's communication style."""
 
-    examples_path = Path("twin_data/style_examples.jsonl")
+    examples_path = Path(
+        "twin_data/style_examples.jsonl"
+    )
 
     examples = []
 
-    with examples_path.open("r", encoding="utf-8") as file:
+    with examples_path.open(
+        "r",
+        encoding="utf-8"
+    ) as file:
+
         for line in file:
+
             if not line.strip():
                 continue
 
-            examples.append(json.loads(line))
+            examples.append(
+                json.loads(line)
+            )
 
-    filtered_examples = [
+    if not examples:
+        return "No style examples available."
+
+    # -----------------------------------------------------
+    # Prefer the requested language,
+    # but do not completely exclude mixed examples.
+    # -----------------------------------------------------
+
+    preferred_examples = [
         example
         for example in examples
         if example.get("language") == language
     ]
 
-    if not filtered_examples:
-        filtered_examples = examples
+    mixed_examples = [
+        example
+        for example in examples
+        if example.get("language") == "mixed"
+    ]
 
-    if not filtered_examples:
-        return "No style examples available."
+    other_examples = [
+        example
+        for example in examples
+        if example.get("language")
+        not in {language, "mixed"}
+    ]
+
+    candidate_examples = (
+        preferred_examples
+        + mixed_examples
+        + other_examples
+    )
 
     texts = [
         "passage: " + example["question"]
-        for example in filtered_examples
+        for example in candidate_examples
     ]
 
-    example_embeddings = embed_style_texts(texts)
+    example_embeddings = embed_style_texts(
+        texts
+    )
 
     query_embedding = embed_style_texts(
         ["query: " + question]
@@ -132,7 +174,10 @@ def get_style_examples(question: str, language: str = "en") -> str:
         example_embeddings.T
     ).squeeze(0)
 
-    top_k = min(3, len(filtered_examples))
+    top_k = min(
+        3,
+        len(candidate_examples)
+    )
 
     top_scores, top_indices = torch.topk(
         similarities,
@@ -141,12 +186,21 @@ def get_style_examples(question: str, language: str = "en") -> str:
 
     selected_examples = []
 
-    for score, index in zip(top_scores, top_indices):
-        example = filtered_examples[index.item()]
+    for score, index in zip(
+        top_scores,
+        top_indices
+    ):
+
+        example = candidate_examples[
+            index.item()
+        ]
 
         selected_examples.append(
             {
-                "similarity": round(float(score.item()), 4),
+                "similarity": round(
+                    float(score.item()),
+                    4
+                ),
                 "question": example["question"],
                 "answer": example["answer"],
                 "language": example["language"]
